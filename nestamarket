@@ -1,2 +1,290 @@
 
-
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0b1019">
+<title>netsamarket</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+:root {
+  color-scheme: dark;
+  --bg:#0b1019; --panel:#131c29; --line:#253244;
+  --text:#f3f6fb; --muted:#91a0b4; --green:#24d69a;
+  --red:#ff647c; --blue:#6098ff;
+}
+* { box-sizing:border-box; }
+body {
+  margin:0; background:var(--bg); color:var(--text);
+  font-family:Arial,Helvetica,sans-serif; padding-bottom:85px;
+}
+header {
+  padding:19px 17px 14px; display:flex;
+  align-items:center; justify-content:space-between;
+  border-bottom:1px solid var(--line);
+}
+.brand { font-size:21px; font-weight:800; letter-spacing:-.7px; }
+.brand span { color:var(--green); }
+.pill {
+  font-size:10px; padding:6px 9px; border-radius:20px;
+  color:var(--green); background:#123529;
+}
+main { padding:16px; max-width:700px; margin:auto; }
+h1 { font-size:24px; margin:5px 0 7px; }
+h2 { font-size:17px; margin:24px 0 12px; }
+p { color:var(--muted); line-height:1.5; }
+.small { font-size:12px; color:var(--muted); }
+.balance {
+  background:linear-gradient(135deg,#183d39,#172536 75%);
+  border:1px solid #31544f; border-radius:18px;
+  padding:19px; margin:16px 0;
+}
+.balance-label { color:#bbd5d0; font-size:12px; }
+.amount { font-size:30px; font-weight:800; margin:9px 0; }
+.actions { display:flex; gap:9px; margin-top:16px; }
+button {
+  cursor:pointer; font-weight:700; border:0; border-radius:10px;
+  padding:12px; color:white; background:#263448;
+}
+.actions button { flex:1; }
+button:disabled { opacity:.45; cursor:not-allowed; }
+.primary { background:var(--green); color:#071810; }
+.market {
+  background:var(--panel); border:1px solid var(--line);
+  border-radius:15px; padding:15px; margin:10px 0;
+}
+.market-top { display:flex; justify-content:space-between; gap:10px; }
+.category { font-size:10px; color:var(--blue); text-transform:uppercase; }
+.question { font-size:15px; font-weight:700; line-height:1.45; margin:9px 0; }
+.prob { font-size:23px; font-weight:800; }
+.positive { color:var(--green); }
+.negative { color:var(--red); }
+.bar { height:5px; background:#293447; border-radius:10px; overflow:hidden; margin:12px 0; }
+.bar div { height:100%; background:var(--green); }
+.trade-buttons { display:flex; gap:9px; margin-top:12px; }
+.trade-buttons button { flex:1; }
+.yes { background:#164d3b; color:#60f0b8; }
+.no { background:#512635; color:#ff8ba0; }
+.search {
+  width:100%; background:var(--panel); border:1px solid var(--line);
+  color:white; border-radius:11px; padding:13px; font-size:14px;
+}
+.tabs { display:flex; gap:8px; overflow-x:auto; margin:13px 0; }
+.tabs button { white-space:nowrap; font-size:12px; padding:9px 12px; }
+.tabs button.active { background:#24483e; color:var(--green); }
+.stat-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.stat { background:var(--panel); border:1px solid var(--line); padding:15px; border-radius:13px; }
+.stat strong { display:block; font-size:20px; margin-top:8px; }
+.row { display:flex; justify-content:space-between; gap:10px; padding:13px 0; border-bottom:1px solid var(--line); }
+.empty { text-align:center; padding:28px 10px; color:var(--muted); }
+.notice {
+  background:#28251a; color:#e6d9a5; border:1px solid #51452a;
+  border-radius:10px; padding:11px; font-size:11px; line-height:1.5;
+}
+nav {
+  position:fixed; bottom:0; left:0; right:0; z-index:5;
+  display:flex; justify-content:space-around; gap:2px;
+  background:#101722; border-top:1px solid var(--line);
+  padding:9px 4px calc(9px + env(safe-area-inset-bottom));
+}
+nav button {
+  background:transparent; color:var(--muted); flex:1;
+  padding:7px 2px; font-size:10px;
+}
+nav button span { display:block; font-size:19px; margin-bottom:4px; }
+nav button.active { color:var(--green); }
+dialog {
+  width:calc(100% - 30px); max-width:390px; color:white;
+  background:var(--panel); border:1px solid var(--line);
+  border-radius:17px; padding:20px;
+}
+dialog::backdrop { background:#000b; }
+dialog input {
+  width:100%; padding:12px; border:1px solid var(--line);
+  border-radius:10px; background:#0b1019; color:white; margin:12px 0;
+}
+dialog form button { width:100%; margin-top:8px; }
+footer { text-align:center; font-size:10px; color:var(--muted); padding:25px 0; }
+</style>
+</head>
+<body>
+<header>
+  <div class="brand"><span>netsa</span>market</div>
+  <div class="pill">● SIMULATED</div>
+</header>
+
+<main id="app"></main>
+
+<nav>
+  <button class="active" data-page="markets"><span>◈</span>Markets</button>
+  <button data-page="portfolio"><span>▥</span>Portfolio</button>
+  <button data-page="activity"><span>↕</span>Activity</button>
+  <button data-page="wallet"><span>▣</span>Wallet</button>
+  <button data-page="profile"><span>●</span>Profile</button>
+</nav>
+
+<dialog id="tradeDialog">
+  <form id="tradeForm">
+    <h2 id="tradeTitle">Place simulated trade</h2>
+    <p id="tradeDescription"></p>
+    <label for="tradeAmount" class="small">Amount in virtual USD</label>
+    <input id="tradeAmount" type="number" min="1" step="1" value="10" required>
+    <div class="small" id="tradeBalance"></div>
+    <button class="primary" type="submit">Confirm simulated trade</button>
+    <button type="button" id="cancelTrade" style="width:100%;margin-top:8px">Cancel</button>
+  </form>
+</dialog>
+
+<script>
+(() => {
+  const tg = window.Telegram?.WebApp;
+  try { tg?.ready(); tg?.expand(); } catch(e) {}
+
+  const initialMarkets = [
+    {id:1,category:"Economics",question:"Will gold rise over the next 24 hours?",yes:64,volume:28450},
+    {id:2,category:"Ethiopia",question:"Will a major infrastructure project be announced this month?",yes:52,volume:18320},
+    {id:3,category:"Sports",question:"Will Ethiopia win a gold medal at the next major athletics event?",yes:71,volume:12600},
+    {id:4,category:"Technology",question:"Will a major AI product launch before month-end?",yes:43,volume:9700},
+    {id:5,category:"Business",question:"Will coffee prices rise this week?",yes:58,volume:8100},
+    {id:6,category:"World",question:"Will global technology stocks finish higher this week?",yes:49,volume:15400}
+  ];
+
+  const state = {
+    balance:1000, markets:initialMarkets.map(m=>({...m})),
+    positions:[], history:[], page:"markets", category:"All",
+    search:"", selected:null, side:"YES"
+  };
+  const app = document.getElementById("app");
+  const money = n => "$" + Number(n).toFixed(2);
+  const el = (id) => document.getElementById(id);
+  const escapeHtml = s => String(s).replace(/[&<>"']/g,c=>({
+    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+  }[c]));
+
+  function renderMarkets() {
+    const categories=["All","Economics","Ethiopia","Sports","Technology","Business","World"];
+    const list=state.markets.filter(m=>
+      (state.category==="All"||m.category===state.category) &&
+      m.question.toLowerCase().includes(state.search.toLowerCase())
+    );
+    app.innerHTML=`
+      <div class="small">MARKETS / SIMULATED DATA</div>
+      <h1>Discover markets</h1>
+      <p>Explore predictions using virtual funds only.</p>
+      <div class="balance">
+        <div class="balance-label">Virtual available balance</div>
+        <div class="amount">${money(state.balance)}</div>
+        <div class="small">Practice account · No real money</div>
+        <div class="actions">
+          <button onclick="window.netsaPage('portfolio')">My portfolio</button>
+          <button onclick="window.netsaPage('wallet')">Wallet</button>
+        </div>
+      </div>
+      <input class="search" id="search" placeholder="Search markets..." value="${escapeHtml(state.search)}">
+      <div class="tabs">${categories.map(c=>`<button class="${state.category===c?'active':''}" data-category="${c}">${c}</button>`).join("")}</div>
+      <h2>Trending markets <span class="small">· ${list.length}</span></h2>
+      ${list.length?list.map(m=>`
+        <article class="market">
+          <div class="market-top"><span class="category">${escapeHtml(m.category)}</span><span class="small">Vol. $${m.volume.toLocaleString()}</span></div>
+          <div class="question">${escapeHtml(m.question)}</div>
+          <div class="market-top"><span class="prob">${m.yes}%</span><span class="positive">YES probability</span></div>
+          <div class="bar"><div style="width:${m.yes}%"></div></div>
+          <div class="market-top small"><span>YES ${m.yes}%</span><span>NO ${100-m.yes}%</span></div>
+          <div class="trade-buttons">
+            <button class="yes" data-trade="${m.id}:YES">Buy YES</button>
+            <button class="no" data-trade="${m.id}:NO">Buy NO</button>
+          </div>
+        </article>`).join(""):`<div class="empty">No matching markets.</div>`}
+      <div class="notice">All markets and prices are sample data. No real trades or payments are processed.</div>
+    `;
+    el("search").addEventListener("input",e=>{state.search=e.target.value;const pos=e.target.selectionStart;renderMarkets();const s=el("search");s.focus();s.setSelectionRange(pos,pos);});
+    app.querySelectorAll("[data-category]").forEach(b=>b.onclick=()=>{state.category=b.dataset.category;renderMarkets();});
+    app.querySelectorAll("[data-trade]").forEach(b=>b.onclick=()=>startTrade(b.dataset.trade));
+  }
+
+  function renderPortfolio() {
+    const value=state.positions.reduce((sum,p)=>sum+p.amount,0);
+    app.innerHTML=`
+      <div class="small">YOUR ACCOUNT</div><h1>Portfolio</h1>
+      <p>Track your simulated positions and spending.</p>
+      <div class="stat-grid">
+        <div class="stat"><span class="small">Available balance</span><strong>${money(state.balance)}</strong></div>
+        <div class="stat"><span class="small">Open positions</span><strong>${state.positions.length}</strong></div>
+        <div class="stat"><span class="small">Amount invested</span><strong>${money(value)}</strong></div>
+        <div class="stat"><span class="small">Total trades</span><strong>${state.history.length}</strong></div>
+      </div>
+      <h2>Open positions</h2>
+      ${state.positions.length?state.positions.map(p=>`<div class="market"><div class="category">${p.side} · ${escapeHtml(p.category)}</div><div class="question">${escapeHtml(p.question)}</div><div class="row"><span class="small">Virtual amount</span><strong>${money(p.amount)}</strong></div><div class="row"><span class="small">Entry probability</span><strong>${p.price}%</strong></div></div>`).join(""):`<div class="empty">No positions yet.<br>Choose a market and place a simulated trade.</div>`}
+    `;
+  }
+
+  function renderActivity() {
+    app.innerHTML=`<div class="small">ACCOUNT RECORDS</div><h1>Activity</h1><p>Your simulated trade history on this device.</p>
+      ${state.history.length?[...state.history].reverse().map(t=>`<div class="row"><div><strong>${escapeHtml(t.side)} · ${escapeHtml(t.question)}</strong><div class="small">${escapeHtml(t.time)}</div></div><div style="text-align:right"><strong>${money(t.amount)}</strong><div class="small">${t.status}</div></div></div>`).join(""):`<div class="empty">No activity yet.</div>`}
+      <div class="notice">This history is temporary and stored only in this page's memory. It is not connected to an account or server.</div>`;
+  }
+
+  function renderWallet() {
+    app.innerHTML=`<div class="small">WALLET</div><h1>Virtual wallet</h1><p>Your practice balance is not withdrawable money.</p>
+      <div class="balance"><div class="balance-label">Available virtual funds</div><div class="amount">${money(state.balance)}</div><div class="small">Simulated account balance</div></div>
+      <div class="market"><h2 style="margin-top:0">Deposit</h2><p>Payment methods will be configured in a future phase.</p><button disabled style="width:100%">Deposits · Coming soon</button></div>
+      <div class="market"><h2 style="margin-top:0">Withdraw</h2><p>Real withdrawals are not available.</p><button disabled style="width:100%">Withdrawals · Coming soon</button></div>
+      <div class="notice">Do not send money to anyone for this prototype. No payment provider is connected.</div>`;
+  }
+
+  function renderProfile() {
+    const user=tg?.initDataUnsafe?.user;
+    const name=user?[user.first_name,user.last_name].filter(Boolean).join(" "):"Guest trader";
+    app.innerHTML=`<div class="small">ACCOUNT</div><h1>Profile</h1><p>Welcome to netsamarket.</p>
+      <div class="market"><div class="category">CURRENT SESSION</div><h2 style="margin-top:9px">${escapeHtml(name)}</h2><p>${user?"Telegram session detected. Server-side verification is not connected yet.":"Guest mode · No account created"}</p></div>
+      <div class="row"><span>Platform</span><strong>Telegram Mini App ready</strong></div>
+      <div class="row"><span>Trading mode</span><strong class="positive">Simulated</strong></div>
+      <div class="row"><span>Virtual balance</span><strong>${money(state.balance)}</strong></div>
+      <div class="notice">Telegram identity must be verified by a backend before it can be trusted for real accounts or transactions.</div>`;
+  }
+
+  function render() {
+    document.querySelectorAll("nav button").forEach(b=>b.classList.toggle("active",b.dataset.page===state.page));
+    if(state.page==="markets")renderMarkets();
+    else if(state.page==="portfolio")renderPortfolio();
+    else if(state.page==="activity")renderActivity();
+    else if(state.page==="wallet")renderWallet();
+    else renderProfile();
+  }
+
+  function startTrade(raw) {
+    const [id,side]=raw.split(":");
+    const market=state.markets.find(m=>m.id===Number(id));
+    if(!market)return;
+    state.selected=market;state.side=side;
+    el("tradeTitle").textContent=`Buy ${side}`;
+    el("tradeDescription").textContent=market.question;
+    el("tradeBalance").textContent=`Available virtual balance: ${money(state.balance)}`;
+    el("tradeAmount").value="10";
+    el("tradeDialog").showModal();
+  }
+
+  el("cancelTrade").onclick=()=>el("tradeDialog").close();
+  el("tradeForm").onsubmit=e=>{
+    e.preventDefault();
+    const amount=Number(el("tradeAmount").value);
+    if(!Number.isFinite(amount)||amount<=0)return alert("Enter a valid positive amount.");
+    if(amount>state.balance)return alert("Insufficient virtual balance.");
+    const m=state.selected;
+    const price=state.side==="YES"?m.yes:100-m.yes;
+    state.balance=Number((state.balance-amount).toFixed(2));
+    const t={id:Date.now(),marketId:m.id,question:m.question,category:m.category,side:state.side,amount,price,status:"Simulated",time:new Date().toLocaleString()};
+    state.positions.push(t);state.history.push(t);
+    el("tradeDialog").close();
+    state.page="portfolio";render();
+  };
+
+  window.netsaPage=page=>{state.page=page;render();};
+  document.querySelectorAll("nav button").forEach(b=>b.onclick=()=>{state.page=b.dataset.page;render();});
+  render();
+})();
+</script>
+</body>
+</html>
+
